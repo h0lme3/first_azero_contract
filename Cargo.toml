@@ -10,8 +10,6 @@ ink = { version = "4.0.1", default-features = false }
 scale = { package = "parity-scale-codec", version = "3", default-features = false, features = ["derive"] }
 scale-info = { version = "2.3", default-features = false, features = ["derive"], optional = true }
 
-ink_lang = "3.4.0"
-ink_storage = "4.0.1"
 
 [dev-dependencies]
 ink_e2e = "4.0.1"
