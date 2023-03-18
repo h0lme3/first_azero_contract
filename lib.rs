@@ -1,32 +1,28 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use ink_lang as ink;
-
 #[ink::contract]
 mod mytoken {
+    use ink::storage::Mapping;
+
     // storage definition
-
-    use ink_storage::{traits::SpreadAllocate, Mapping};
-
     #[ink(storage)]
-    #[derive(SpreadAllocate)]
+    #[derive(Default)]
     pub struct MyToken {
         total_supply: u32,
         balances: Mapping<AccountId, u32>,
     }
 
-    use ink_lang::utils::initialize_contract;
     impl MyToken {
         // constructor definition
-
         /// Creates a token contract with the given initial supply belonging to the contract creator.
         #[ink(constructor)]
         pub fn new_token(supply: u32) -> Self {
-            initialize_contract(|contract: &mut Self| {
-                let caller = Self::env().caller();
-                contract.balances.insert(&caller, &supply);
-                contract.total_supply = supply;
-            })
+            let caller = Self::env().caller();
+            let mut instance = Self::default();
+
+            instance.balances.insert(&caller, &supply);
+            instance.total_supply = supply;
+            instance
         }
 
         /// Total supply of the token.
@@ -50,21 +46,20 @@ mod mytoken {
             let sender = self.env().caller();
             let sender_balance = self.balance_of(sender);
             if sender_balance < value {
-                return;
+                false;
             }
             self.balances.insert(sender, &(sender_balance - value));
             let to_balance = self.balance_of(to);
             self.balances.insert(to, &(to_balance + value));
+            true
         }
-        
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::mytoken::MyToken;
-    use ink_env::{test, DefaultEnvironment};
-    use ink_lang as ink;
+    use ink::env::{test, DefaultEnvironment};
 
     #[ink::test]
     fn total_supply_works() {
@@ -79,7 +74,6 @@ mod tests {
         let mytoken = MyToken::new_token(1000);
         assert_eq!(mytoken.balance_of(accounts.alice), 1000);
         assert_eq!(mytoken.balance_of(accounts.bob), 0);
-        
     }
 
     #[ink::test]
